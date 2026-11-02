@@ -1,0 +1,159 @@
+# Training and evaluation settings of the real-arm experiments (OpenArm right arm).
+# Relative paths resolve against this file's directory.
+
+env:
+  # goal workspace: a sphere segment sampled from forward kinematics over the joint limits
+  r_goal: 0.250
+  centre_m: [0.250, -0.248, 0.169]
+  cloud_samples: 300000
+  cloud_halfwidth_deg: 0.0
+  cloud_seed: 0
+  joint_lo_deg: [-80, -10, -90, 0, -90, -45, -90]
+  joint_hi_deg: [105, 190, 90, 140, 90, 45, 90]
+  tool_z_m: 0.1025
+  collision_tool_z_m: 0.1825
+  min_x_m: 0.150
+  min_y_m: -1000000000.0
+  max_y_m: 0.002
+  min_z_m: -1000000000.0
+  min_base_dist_m: 0.100
+  # collision envelope checked on every command
+  self_pair_min_gap: 4
+  link_bounds_from: 2
+  self_clearance_m: 0.061
+  post_clear_m: 0.15
+  post_xz: [0.0, -0.031]
+  post_from: -2
+  shoulder_clear_m: 0.10
+  shoulder_z_range: [-0.25, 0.19]
+  left_arm_clear_m: 0.15
+  left_arm_xz: [0.0, -0.18]
+  link_min_x_m: -0.118
+  link_min_y_m: -0.60
+  link_min_z_m: -0.013
+  tool_min_x_m: -0.079
+  tool_min_y_m: -0.62
+  tool_min_z_m: -0.105
+  tool_min_base_dist_m: 0.061
+  home_pose_deg: [7.3, 58.6, -50.9, 105.1, 30.3, -28.1, -43.1]
+  # control
+  control_hz: 10.0
+  max_episode_steps: 150
+  action_scale_rad: 0.03
+  max_joint_delta_rad: 0.05
+  max_joint_velocity_rad_s: 0.4
+  ref_band_rad: 0.25
+  ref_limit_relax_deg: 2.0
+  gain_schedule: true
+  gain_min: 0.03
+  gain_d_lo_m: 0.0005
+  gain_d_hi_m: 0.00931
+  gain_th_lo_deg: 0.415
+  gain_th_hi_deg: 2.328
+  # observation
+  zoom_obs: true
+  zoom_pos_d0_m: [0.01, 0.0005]
+  zoom_ori_d0_deg: [20.0, 0.25]
+  obs_prev_action: true
+  obs_ref_lead: true
+  obs_noise_q_rad: 0.01
+  obs_noise_dq_rad_s: 0.01
+  goal_jitter_deg: 1.0
+  success_tau_m: 0.01
+  success_tau_r_deg: 2.0
+  settled_hold_steps: 10
+  # resets and guards
+  reset_ramp_s: 4.0
+  reset_settle_s: 1.5
+  reset_ramp_hz: 10.0
+  frozen_state_steps: 20
+  collision_block_steps: 5
+  collision_terminate: true
+
+reward:
+  tau_p: 0.001
+  tau_r_deg: 0.2
+  tau_u: 0.5
+  kp_size: 0.45
+  w_pos_linear: -0.2
+  w_tanh_fine: 0.1
+  std_tanh_fine: 0.10
+  w_kp_wide: 1.0
+  std_kp_wide: 0.20
+  w_kp_sharp: 1.0
+  std_kp_sharp: 0.05
+  w_action_rate: -0.05
+  w_joint_vel: -0.0005
+  w_bsp: 0.2
+  bsp_cap: 3.0
+  w_snlb: 26.831
+  w_dwell: 1.0
+  dwell_rho: 1.0
+  w_pbrs: 1.0
+  pbrs_cap: 500.0
+  w_limit_margin: 5.0
+  limit_eps: 0.05
+  limit_gate_rho: 10.0
+  rho_obs_d0: 20.0
+  scale_by_dt: true
+
+curriculum:
+  # start = goal_q + N(0, sigma), sigma ~ U[sigma_lo_deg, sigma_t]; sigma_t follows [run fraction, deg]
+  sigma_lo_deg: 2.0
+  schedule: [[0.0, 10.0], [0.5, 20.0]]
+  rho_floor: 10.0
+  max_start_tries: 20
+
+agent:
+  total_steps: 120000
+  checkpoint_at: [10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 110000]
+  seed: 0
+  gamma: 0.98
+  tau: 0.005
+  lr: 3.0e-4
+  batch_size: 1024
+  buffer_min: 1024
+  utd: 2
+  use_compile: true
+  random_warmup: 200
+  actor_num_blocks: 2
+  actor_hidden_dim: 128
+  critic_num_blocks: 2
+  critic_hidden_dim: 256
+  critic_num_bins: 201
+  actor_update_period: 2
+  reward_g_max: 5.0
+  normalize_reward: true
+  temp_target_sigma: 0.30
+
+her:
+  p_orig: 0.4
+  p_future: 0.4
+  p_cur: 0.2
+  p_rand: 0.0
+  near_sigma_p_m: 0.001
+  near_sigma_r_deg: 0.2
+  near_zero_frac: 0.7
+  near_anchor_frac: 0.75
+  near_anchor_rho: 10.0
+
+demos:
+  file: data/demos.npz
+  ratio: 0.25
+  p_orig: 0.5
+  p_future: 0.3
+  p_cur: 0.2
+  near_anchor_frac: 0.75
+  task_pool: data/task_pool.json
+  task_pool_frac_schedule: [[0.0, 0.0], [0.1, 0.25], [0.2, 0.5]]
+
+log:
+  every: 200
+  window: 10
+  save_dir: runs
+
+collect:
+  # collision handling while recording the demonstrations (training uses the env block above)
+  env:
+    collision_block_steps: 20
+    collision_terminate: false

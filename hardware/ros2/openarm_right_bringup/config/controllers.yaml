@@ -1,0 +1,46 @@
+controller_manager:
+  ros__parameters:
+    # Headroom for 8 motors on one classic CAN bus.
+    update_rate: 100
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    forward_position_controller:
+      type: forward_command_controller/ForwardCommandController
+
+    forward_effort_controller:
+      type: forward_command_controller/ForwardCommandController
+
+    gripper_controller:
+      type: position_controllers/GripperActionController
+
+# Joint position references (std_msgs/Float64MultiArray, 7 values in rad).
+forward_position_controller:
+  ros__parameters:
+    joints:
+      - openarm_joint1
+      - openarm_joint2
+      - openarm_joint3
+      - openarm_joint4
+      - openarm_joint5
+      - openarm_joint6
+      - openarm_joint7
+    interface_name: position
+
+# Gravity torques from gravity_node.py (Nm), added to the position PD of the motors.
+forward_effort_controller:
+  ros__parameters:
+    joints:
+      - openarm_joint1
+      - openarm_joint2
+      - openarm_joint3
+      - openarm_joint4
+      - openarm_joint5
+      - openarm_joint6
+      - openarm_joint7
+    interface_name: effort
+
+gripper_controller:
+  ros__parameters:
+    joint: openarm_finger_joint1

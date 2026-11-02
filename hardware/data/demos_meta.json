@@ -1,0 +1,75 @@
+{
+ "tasks_file": "demo_tasks.json",
+ "env": {
+  "gain_schedule": true,
+  "gain_min": 0.03,
+  "gain_d_lo_m": 0.0005,
+  "gain_d_hi_m": 0.00931,
+  "gain_th_lo_deg": 0.415,
+  "gain_th_hi_deg": 2.328,
+  "action_scale_rad": 0.03,
+  "max_joint_delta_rad": 0.05,
+  "max_joint_velocity_rad_s": 0.4,
+  "ref_band_rad": 0.25,
+  "control_hz": 10.0,
+  "zoom_obs": true,
+  "zoom_pos_d0_m": [
+   0.01,
+   0.0005
+  ],
+  "zoom_ori_d0_deg": [
+   20.0,
+   0.25
+  ],
+  "obs_prev_action": true,
+  "obs_ref_lead": true,
+  "joint_lo_deg": [
+   -80,
+   -10,
+   -90,
+   0,
+   -90,
+   -45,
+   -90
+  ],
+  "joint_hi_deg": [
+   105,
+   190,
+   90,
+   140,
+   90,
+   45,
+   90
+  ],
+  "tool_z_m": 0.1025
+ },
+ "reward": {
+  "tau_p": 0.001,
+  "tau_r_deg": 0.2,
+  "tau_u": 0.5,
+  "kp_size": 0.45,
+  "w_pos_linear": -0.2,
+  "w_tanh_fine": 0.1,
+  "std_tanh_fine": 0.1,
+  "w_kp_wide": 1.0,
+  "std_kp_wide": 0.2,
+  "w_kp_sharp": 1.0,
+  "std_kp_sharp": 0.05,
+  "w_action_rate": -0.05,
+  "w_joint_vel": -0.0005,
+  "w_bsp": 0.2,
+  "bsp_cap": 3.0,
+  "w_snlb": 26.831,
+  "w_dwell": 1.0,
+  "dwell_rho": 1.0,
+  "w_pbrs": 1.0,
+  "pbrs_cap": 500.0,
+  "pbrs_gamma": 0.98,
+  "w_limit_margin": 1.0,
+  "limit_eps": 0.05,
+  "limit_gate_rho": 10.0,
+  "rho_obs_d0": 20.0,
+  "scale_by_dt": true,
+  "dt": 0.1
+ }
+}

@@ -1,0 +1,9 @@
+# Python 3.12 on ROS 2 Jazzy (Ubuntu 24.04). From ROS / apt, not pip:
+#   rclpy, sensor_msgs, std_msgs     (ros-jazzy-ros-base)
+#   PyKDL                            (python3-pykdl)
+#   PyYAML                           (python3-yaml)
+#   openarm_description              (https://github.com/enactic/openarm_description, Apache-2.0), on the ROS path
+torch==2.12.0
+gymnasium==1.2.3
+urdf_parser_py
+numpy
