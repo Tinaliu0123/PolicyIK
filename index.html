@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PolicyIK: High-Precision Inverse Kinematics with RL</title>
+<meta name="description" content="PolicyIK, a reinforcement learning policy for inverse kinematics, reaches 54 of 60 real-arm tasks within 1 mm and 0.2° and holds 43 through the final 5 s.">
+<meta name="citation_title" content="PolicyIK: High-Precision Inverse Kinematics for Robot Arms with Reinforcement Learning">
+<meta name="citation_author" content="Liu, Yuhan">
+<meta name="citation_author" content="Liu, Xinqi">
+<meta name="citation_author" content="Dong, Zixuan">
+<meta name="citation_author" content="Ross, Keith W.">
+<meta name="citation_author" content="Wan, Shenji">
+<meta name="citation_publication_date" content="2026/11/03">
+<meta name="citation_pdf_url" content="https://arxiv.org/pdf/2611.05372">
+<meta name="citation_arxiv_id" content="2611.05372">
+<link rel="canonical" href="https://tinaliu0123.github.io/PolicyIK/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://tinaliu0123.github.io/PolicyIK/">
+<meta property="og:title" content="PolicyIK: High-Precision Inverse Kinematics for Robot Arms with Reinforcement Learning">
+<meta property="og:description" content="Trained directly on a physical arm, PolicyIK reaches 54 of 60 tasks within 1 mm and 0.2° and holds 43 throughout the final 5 s.">
+<meta property="og:image" content="https://tinaliu0123.github.io/PolicyIK/static/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PolicyIK: High-Precision Inverse Kinematics with RL">
+<meta name="twitter:description" content="Trained directly on a physical arm, PolicyIK reaches 54 of 60 tasks within 1 mm and 0.2° and holds 43 throughout the final 5 s.">
+<meta name="twitter:image" content="https://tinaliu0123.github.io/PolicyIK/static/og.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "ScholarlyArticle", "headline": "PolicyIK: High-Precision Inverse Kinematics for Robot Arms with Reinforcement Learning", "author": [{"@type": "Person", "name": "Yuhan Liu"}, {"@type": "Person", "name": "Xinqi Liu"}, {"@type": "Person", "name": "Zixuan Dong"}, {"@type": "Person", "name": "Keith W. Ross"}, {"@type": "Person", "name": "Shenji Wan"}], "about": ["inverse kinematics", "reinforcement learning", "robot arms"], "image": "https://tinaliu0123.github.io/PolicyIK/static/og.jpg", "url": "https://tinaliu0123.github.io/PolicyIK/", "datePublished": "2026-11-03", "sameAs": ["https://arxiv.org/abs/2611.05372"]}
+</script>
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>
+:root{--bg:#FFFFFF;--ink:#1D2127;--muted:#6B717B;--band:#E3EDEF;--accent:#257782;--unheld:#B7BCC4;--cell:#FFFFFF;--cell-line:#E2E5EA;--cell-held:#FFFFFF;--held-curve:#257782;--bar-other:#C5CAD2;--cells:rule;--radius:0px;color-scheme:light}
+:root{
+  --text-2:color-mix(in srgb,var(--ink) 70%,var(--bg));
+  --ink-2:color-mix(in srgb,var(--ink) 84%,var(--bg));
+  --line:color-mix(in srgb,var(--ink) 12%,var(--bg));
+  --line-strong:color-mix(in srgb,var(--ink) 28%,var(--bg));
+  --surface:color-mix(in srgb,var(--ink) 4%,var(--bg));
+  --mark:color-mix(in srgb,var(--accent) 24%,#FFFFFF);  
+  --track:color-mix(in srgb,var(--ink) 7%,var(--bg));
+  --stripe:color-mix(in srgb,var(--ink) 7%,transparent);
+  --banner-bg:rgb(255 255 255 / .94); --banner-ink:var(--ink);  
+  --figure-bg:#FFFFFF; --figure-line:color-mix(in srgb,var(--ink) 12%,#FFFFFF);
+  --fig-orange:#E1833D; --fig-teal:#4E9AA3; --fig-purple:#8B7BD0;  
+  --btn:#24292f; --btn-hover:#3a4048;  
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --w-body:400; --w-strong:600; --w-head:600;  
+  --fs-xs:16.1px; --fs-sm:17.8px;  
+  --page:var(--col); --col:920px; --measure:var(--col); --media:var(--col); --r:min(var(--radius),10px);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:56px}
+body{margin:0;background:var(--bg);color:var(--ink);font:var(--w-body) 20px/1.5 var(--serif);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--banner-bg);z-index:30}
+p,h1,h2,h3,figure{margin:0}
+b,strong{font-weight:var(--w-strong)}
+a{color:var(--accent);text-decoration-color:color-mix(in srgb,var(--accent) 40%,transparent);text-underline-offset:.18em}
+a:hover{text-decoration-color:currentColor}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+img{display:block;max-width:100%;height:auto}
+button{font:inherit}
+.wrap{max-width:calc(var(--col) + 32px);margin-inline:auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+.banner{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--banner-bg);color:var(--banner-ink);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);font-size:var(--fs-xs);line-height:1.2}
+.banner .wrap{max-width:calc(var(--page) + 32px);display:flex;align-items:center;justify-content:space-between;gap:18px;padding-block:9.9px}
+.banner .brand{flex:none;color:var(--accent);font:var(--w-head) 25.6px/1 var(--serif);text-decoration:none}
+@media (max-width:720px){.banner .brand{font-size:23.3px}}
+.banner nav{display:flex;gap:17px;min-width:0;overflow-x:auto;scrollbar-width:none}
+.banner nav a{color:var(--muted);text-decoration:none;white-space:nowrap}
+.banner nav a:hover{color:var(--ink)}
+.banner nav a.on{color:var(--ink);text-decoration-line:underline;text-decoration-color:var(--accent);text-decoration-thickness:2px;text-underline-offset:.35em}
+@media (max-width:860px){.banner nav{display:none}}
+
+.hero .wrap{padding-block:48px}
+.masthead{display:grid;justify-items:center;text-align:center}
+h1{max-width:var(--col);font-size:clamp(31.1px,4.7vw,44.4px);line-height:1.2;font-weight:var(--w-head);text-wrap:balance}
+h1 .h1-l{display:inline-block}
+h1 .name{color:var(--accent)}
+.authors{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 26px;margin-top:22px;font-size:20px;line-height:1.5}
+.authors a{color:inherit;text-decoration:none}.authors a:hover{text-decoration:underline}
+.authors sup,.affils sup{font-size:.62em;color:var(--text-2);margin-left:.08em}
+.affils{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 22px;margin-top:6px;font-size:19.4px;line-height:1.5;color:var(--text-2)}
+.links{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin-top:24px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 24px;border:1px solid var(--ink);border-radius:999px;
+  background:var(--ink);color:var(--bg);font-size:18.3px;font-weight:500;line-height:1;text-decoration:none;cursor:pointer}
+.btn:hover{background:var(--ink-2)}
+.btn svg{width:18px;height:18px;flex:none}
+.btn.ghost{gap:6px;padding:6px 16px;background:var(--bg);color:var(--ink);border-color:var(--line-strong);font-size:var(--fs-xs);line-height:normal}
+.btn.ghost:hover{border-color:var(--ink)}
+.btn.ghost svg{width:15px;height:15px}
+.links .btn{border:0;background:var(--btn);color:#fff;line-height:normal}
+.links .btn:hover{background:var(--btn-hover)}
+.btn[aria-disabled="true"]{cursor:default}
+.links .btn[aria-disabled="true"]:hover{background:var(--btn)}
+.slot.full.film{max-width:var(--col);margin:44px auto 0}
+
+.sec>.wrap{padding-block:48px}
+.sec.alt{background:var(--surface)}
+h2{margin:0 0 24px;font:var(--w-head) 32.2px/1.2 var(--serif);text-align:center;text-wrap:balance}
+h3{margin:0 0 6px;font:var(--w-head) 23.3px/1.3 var(--serif);color:var(--accent);text-wrap:balance}
+.thesis-num{color:var(--accent);font-variant-numeric:lining-nums}
+.thesis-kw{font-weight:var(--w-strong)}
+.thesis-kw.reached{color:var(--accent)}
+.thesis-kw.held{color:var(--held-curve)}
+.sub{margin-top:28px}
+.sub>h3{text-align:center}
+p.line{max-width:var(--measure);margin:16px auto 0;text-align:center;color:var(--ink-2);text-wrap:balance}
+.hl{font-weight:600;color:var(--ink);background:linear-gradient(transparent 60%,var(--mark) 60%);padding-inline:1px}
+p.line.stat{max-width:var(--media);font-variant-numeric:lining-nums}
+p.line.stat b{color:var(--accent);font-weight:var(--w-strong)}
+p.line.stat .ab{color:var(--text-2);font-weight:var(--w-head)}
+p.line.stat+.slot{margin-top:28px} 
+p.line.cap{margin-top:10px;font-size:17.8px;line-height:1.45;color:var(--muted)}
+.abstract{max-width:var(--measure);margin-inline:auto;line-height:1.5;text-align:justify;hyphens:auto;color:var(--ink-2)}
+.code-url{overflow-wrap:anywhere}
+
+.gridfig{--cell-aspect:.62;min-width:0}
+.grid-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10.8px 18px;margin-bottom:14.4px}
+.tally{display:flex;flex-wrap:wrap;gap:5.4px 23.4px;font-size:var(--fs-sm);color:var(--text-2);font-variant-numeric:lining-nums tabular-nums}
+.tally b{color:var(--ink)}
+.grid-ctrl{display:flex;align-items:center;gap:14.4px}
+.clock{font-size:var(--fs-sm);color:var(--text-2);font-variant-numeric:lining-nums tabular-nums;min-width:13ch;text-align:right}
+.btn[aria-pressed="true"] [data-ico="pause"],.btn[aria-pressed="false"] [data-ico="play"]{display:none}
+.canvas-wrap{min-width:0}
+.canvas-wrap canvas{display:block;width:100%;height:auto}
+.nodata{font-size:var(--fs-sm);color:var(--text-2);padding:18px 0}
+.warn{margin-top:18px;font-size:var(--fs-sm);color:var(--ink);background:var(--surface);border:1px solid var(--ink);padding:10.8px 14.4px}
+.glegend{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin-top:12px;font-size:var(--fs-sm);color:var(--ink-2)}
+.glegend span{display:inline-flex;align-items:center;gap:9px;padding:3.6px 13.5px;border:1px solid var(--line);border-radius:999px}
+.k-cell{position:relative;flex:none;width:20.7px;height:14.4px;border:1px solid var(--cell-line);border-radius:min(var(--radius),3px);background:var(--cell)}
+.k-cell::after{content:"";position:absolute;left:2px;right:2px;top:50%;height:2px;margin-top:-1px;background:var(--unheld)}
+.k-cell.held{background:var(--cell-held)}
+.k-cell.held::after{background:var(--held-curve)}
+.k-reach{flex:none;width:9px;height:9px;border-radius:50%;background:var(--accent)}
+.k-band{flex:none;width:20.7px;height:9px;background:var(--band);border-top:1px solid var(--cell-line)}
+
+.vs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 56px;max-width:var(--col);margin:36px auto 0;padding:22px 24px;
+  border:1px solid var(--line);border-radius:8px;background:#fff}
+@media (max-width:760px){.vs{grid-template-columns:minmax(0,1fr);padding:18px 16px}}
+.vs-grp{display:grid;align-content:start}
+.vs-k{margin:0 0 8px;font:500 19.4px/1.35 var(--serif)}
+.vs-row{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr) 36px;align-items:center;gap:12px;padding-block:5px}
+.vs-n{font-size:17.8px;color:var(--ink-2)}
+.vs-t{height:18px;background:var(--track)}
+.vs-b{display:block;height:100%;width:calc(var(--v) / 60 * 100%);border-radius:0 4px 4px 0;background:var(--bar-other)}
+.vs-v{font-size:17.8px;font-weight:var(--w-head);text-align:right;color:var(--ink-2);font-variant-numeric:lining-nums tabular-nums}
+.vs-row.ours .vs-n,.vs-row.ours .vs-v{color:var(--accent);font-weight:var(--w-head)}
+.vs-row.ours .vs-b{background:var(--accent)}
+
+.slot{max-width:var(--media);margin:0 auto}
+.slot.full{max-width:none}
+.slot-box{position:relative;aspect-ratio:16/9;display:grid;place-items:center;border:1px dashed var(--line-strong);border-radius:var(--r);
+  color:var(--text-2);background:repeating-linear-gradient(135deg,var(--stripe) 0 10px,transparent 10px 20px),var(--bg)}
+.slot-stamp{position:absolute;left:15.3px;top:15.3px;font-size:var(--fs-xs);font-weight:var(--w-strong);line-height:1;letter-spacing:.06em;
+  color:var(--ink);background:var(--bg);border:1px solid var(--line-strong);border-radius:3px;padding:7.6px 9.9px 6.5px}
+.play{display:grid;place-items:center;width:72px;height:72px;border-radius:50%;background:color-mix(in srgb,var(--ink) 55%,transparent);color:var(--bg)}
+.play svg{width:30px;height:30px;margin-left:4px}
+.stacked{max-width:727px}
+.stacked .slot-box{aspect-ratio:8/9;grid-template-rows:1fr 1fr;place-items:stretch}
+.stacked .half{position:relative}
+.stacked .half+.half{border-top:1px dashed var(--line-strong)}
+.slot figcaption{margin-top:10px;text-align:center;font-size:var(--fs-sm);color:var(--text-2)}
+.slots2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,324px),1fr));gap:12px;max-width:var(--media);margin:0 auto}
+.slots2 .slot{max-width:none;margin:0}
+.slot+.slots2{margin-top:20px}
+.case-tabs{display:none;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 auto 12px}
+.cases.on .case-tabs{display:flex}
+.case-tabs [aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.cases:not(.on) .cat+.cat{margin-top:28px}
+.car-nav{display:none;align-items:center;justify-content:center;gap:12px;margin-top:12px}
+.cases.on .car-nav:not([hidden]){display:flex}
+.car-pos{min-width:3.5em;text-align:center;font-size:var(--fs-xs);color:var(--muted);font-variant-numeric:lining-nums tabular-nums}
+.car-btn{width:38px;height:38px;justify-content:center;padding:0;font-size:23.3px;line-height:1}
+.car-btn:disabled{opacity:.35;cursor:default}
+.car-btn:disabled:hover{border-color:var(--line-strong)}
+.car-track{position:relative;display:flex;gap:12px;overflow-x:auto;
+  scroll-snap-type:x mandatory;overscroll-behavior-x:contain}
+.cases.on .car-track{scrollbar-width:none}
+.cases.on .car-track::-webkit-scrollbar{display:none}
+@media (prefers-reduced-motion:no-preference){.car-track{scroll-behavior:smooth}}
+.car-slide{flex:0 0 calc(100% - 40px);min-width:0;scroll-snap-align:start}
+.car-slide:last-child{scroll-snap-align:end}
+.media,.film video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#FFFFFF;border:1px solid var(--line);border-radius:var(--r)}
+.player{position:relative}
+.player .progress{position:absolute;left:1px;right:1px;bottom:1px;height:4px;border-radius:0 0 var(--r) var(--r);overflow:hidden;pointer-events:none}
+.player .progress span{display:block;width:100%;height:100%;background:var(--accent);opacity:.55;transform:scaleX(0);transform-origin:left}
+.replay{position:absolute;right:14px;bottom:14px;display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border:0;border-radius:999px;
+  background:rgb(36 41 47 / .82);color:#fff;font:500 17.2px var(--serif);cursor:pointer;box-shadow:0 2px 8px rgb(0 0 0 / .18)}
+.replay:hover{background:var(--btn)}
+.replay svg{width:16px;height:16px}
+.replay[hidden]{display:none}
+@media (prefers-reduced-motion:reduce){.player .progress{display:none}}
+
+.fig{max-width:var(--col);margin:0 auto}
+.panel{background:var(--figure-bg);border:1px solid var(--figure-line);border-radius:var(--r);padding:clamp(9px,2vw,22.5px);overflow:hidden}
+.fig figcaption{max-width:var(--measure);margin:10px auto 0;text-align:center;font-size:var(--fs-sm);color:var(--text-2)}
+.points{list-style:none;padding:0;margin:28px 0 0;display:grid;gap:14px}.points li{position:relative;padding-left:1.6em}.points li::before{content:"";position:absolute;left:.35em;top:.62em;width:.38em;height:.38em;border-radius:50%;background:var(--accent)}
+.designs{display:grid;gap:28px;margin-top:36px;counter-reset:design}
+.design{display:grid;gap:6px;min-width:0;counter-increment:design}
+.design>h3{display:flex;align-items:center;justify-content:center;gap:10px;margin:0;text-align:center}
+.design>h3::before{content:counter(design);flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;
+  background:var(--fk-ink);color:#fff;font:var(--w-strong) 18.3px/1 var(--serif);font-variant-numeric:lining-nums}
+.design>p.line{margin:0 auto}
+.design>.player{margin-top:12px}
+
+.recipe{--rf-gray:#A3A9B2;display:grid;gap:28px;max-width:var(--col);margin:36px auto 0}
+.recipe h3{margin:0 0 18px}
+.rf-rows{display:grid;gap:16px}
+.rf-row,.rf-axis{display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+.rf-txt{font-size:var(--fs-sm);line-height:1.5;color:var(--ink-2);text-wrap:pretty}
+.rf-role{display:block;color:var(--accent);font-weight:var(--w-head)}
+.rf-tr{position:relative;height:12px}
+.rf-bar{position:absolute;inset:0 calc(100% - var(--b)) 0 var(--a);background:var(--accent)}
+.rf-row.on .rf-tr{height:5px}
+.rf-row.on .rf-bar{background:var(--rf-gray)}
+.rf-row.on .rf-txt{color:var(--text-2)}
+.rf-line{position:relative;height:1px;margin-top:4px;background:var(--ink-2)}
+.rf-line::after{content:"";position:absolute;right:0;top:-4px;border-style:solid;border-width:4.5px 0 4.5px 8px;
+  border-color:transparent transparent transparent var(--ink-2)}
+.rf-ends{display:flex;justify-content:space-between;gap:18px;margin-top:6px;font-size:var(--fs-xs);color:var(--text-2)}
+.tl{font-size:var(--fs-xs);line-height:1.2}
+.tl-segs{display:grid;grid-template-columns:3fr minmax(3.2em,1.5fr) 3fr minmax(3.2em,1.5fr) 3fr;gap:3px}
+.tl-segs>span{display:grid;place-items:center;height:39.6px;color:var(--ink)}
+.tl-ep{background:var(--rf-gray)}
+.tl-rs{border:1px solid var(--rf-gray);background:repeating-linear-gradient(135deg,var(--rf-gray) 0 1.5px,transparent 1.5px 6px),var(--bg)}
+.tl-rs span{padding:1px 4px;background:var(--bg)}
+.tl-ticks{height:10px;margin-top:8px;background:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 9px)}
+.tl-k{margin-top:6px;color:var(--text-2)}
+@media (min-width:736px){
+  .rf-row,.rf-axis{grid-template-columns:minmax(0,1fr) 306px;column-gap:28px;align-items:center}
+  .rf-row .rf-txt{grid-column:2;grid-row:1}
+  .rf-row .rf-tr,.rf-ax{grid-column:1;grid-row:1}
+  .rf-row:not(.on) .rf-tr::before{content:"";position:absolute;left:var(--b);right:0;top:50%;border-top:1px dotted var(--line-strong)}
+}
+
+.bibbox{position:relative;max-width:var(--col);margin:0 auto}
+pre.bib{margin:0;padding:18px 20px;overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:8px;
+  font:15px/1.6 var(--mono);color:var(--ink)}
+.copy{position:absolute;top:10px;right:10px;padding:4px 14px;border:1px solid color-mix(in srgb,var(--accent) 28%,#fff);border-radius:999px;
+  background:color-mix(in srgb,var(--accent) 10%,#fff);color:var(--accent);font:500 16.1px var(--serif);cursor:pointer}
+.copy:hover{border-color:var(--accent)}
+
+</style>
+
+</head>
+<body>
+<header class="banner" id="banner" aria-label="Top bar">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="PolicyIK, back to top">PolicyIK</a>
+    <nav aria-label="Sections">
+      <a href="#abstract">Abstract</a><a href="#real">Real arm</a><a href="#compare">vs. Classic IK</a><a href="#design">Method</a><a href="#xarm">xArm7</a><a href="#sim">Simulation</a><a href="#vla">VLA</a><a href="#bibtex">BibTeX</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero" id="top">
+  <div class="wrap">
+    <div class="masthead">
+      <h1><span class="h1-l"><span class="name">PolicyIK</span>: High-Precision Inverse Kinematics</span> <span class="h1-l">for Robot Arms with Reinforcement Learning</span></h1>
+      <p class="authors">
+        <span><a href="https://tinaliu0123.github.io/">Yuhan Liu</a><sup>1*</sup></span><span><a href="https://lucasliuxinqi.github.io/">Xinqi Liu</a><sup>1*</sup></span><span><a href="https://cs.shanghai.nyu.edu/phd-students/zixuan-dong-dongzixuan">Zixuan Dong</a><sup>1*</sup></span>
+        <span><a href="https://sites.google.com/nyu.edu/keithross">Keith W. Ross</a><sup>2</sup></span><span><a href="https://openreview.net/profile?id=~Shenji_Wan1">Shenji Wan</a><sup>1</sup></span>
+      </p>
+      <p class="affils"><span><sup>1</sup>New York University</span><span><sup>2</sup>New York University Abu Dhabi</span><span><sup>*</sup>Equal contribution</span></p>
+      <nav class="links" aria-label="Paper links">
+        <a class="btn" href="https://arxiv.org/pdf/2611.05372" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>Paper</a>
+        <a class="btn" href="https://arxiv.org/abs/2611.05372" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19 12 5l7 14M8 13h8"/></svg>arXiv</a>
+        <a class="btn" data-flag="code" href="https://github.com/Tinaliu0123/PolicyIK" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5"/></svg>Code</a>
+      </nav>
+    </div>
+
+    <figure class="slot full film" id="film">
+      <video src="static/film_v3_22_1920.mp4" poster="static/film_v3_21_poster.jpg" muted autoplay loop playsinline controls preload="auto" aria-label="PolicyIK overview film"></video>
+    </figure>
+    <p class="line lede">PolicyIK reaches and holds poses within 1&nbsp;mm and 0.2°, trained directly on a physical arm.</p>
+  </div>
+</section>
+
+<section class="sec alt" id="abstract">
+  <div class="wrap">
+    <h2>Abstract</h2>
+    <p class="abstract">Inverse kinematics (IK) converts end-effector pose commands into joint motion, and many vision-language-action (VLA) policies rely on it to act on a given arm and to transfer across embodiments. Precise IK remains laborious: redundancy and singularities complicate the inverse mapping, execution depends on hand-tuned controllers, and training data on physical robots are costly to collect. We present PolicyIK, a goal-conditioned reinforcement learning policy for high-precision IK. It updates joint-position references from pose feedback and observes its accumulated reference relative to the measured joints, so it can retain the offset that the position controller needs at rest. Two-scale pose errors with an error-dependent action gain resolve millimeter residuals while preserving large motions. Progress and dwell rewards teach it to both reach the tolerance and stay within it. In simulation, a single attempt by the trained PPO policy keeps the mean errors over the final second within 1&nbsp;mm and 0.2° on 93.5% of held-out tasks, and a deployment protocol raises success to 98.9%. When trained directly on a physical arm with an off-policy RL learner, PolicyIK achieves higher reaching and holding success than all four classic IK controllers under the same time budgets. In simulated pick-and-place, PolicyIK executes the end-effector commands of the π<sub>0.5</sub> VLA policy with 95.7% success. These results show that reinforcement learning can provide high-precision inverse kinematics for robot arms.</p>
+  </div>
+</section>
+
+<section class="sec" id="real">
+  <div class="wrap">
+    <h2>On a real arm, PolicyIK <b class="thesis-kw reached">reaches</b> <span class="thesis-num">54</span> of 60 tasks and <b class="thesis-kw held">holds</b> <span class="thesis-num">43</span>.</h2>
+
+    <figure class="gridfig" id="grid" data-reached="54" data-held="43">
+      <div class="grid-head">
+        <p class="tally"><span>Reached <b data-count="reached">54</b> / 60</span><span>Held <b data-count="held">43</b> / 60</span><span>Median error, final second <b>0.50&nbsp;mm</b>, <b>0.12°</b></span></p>
+        <div class="grid-ctrl">
+          <span class="clock" data-clock aria-hidden="true">t = 25.0 s · 4×</span>
+          <button class="btn ghost" type="button" data-play aria-pressed="false">
+            <svg data-ico="pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>
+            <svg data-ico="play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg><span data-label>Pause</span></button>
+        </div>
+      </div>
+      <div class="canvas-wrap">
+        <canvas role="img" aria-label="Small multiples of 60 real-arm error curves over 25 seconds. 54 tasks reach the 1 mm and 0.2 degree tolerance, and 43 stay within it throughout the final 5 seconds."></canvas>
+        <noscript><p class="nodata">The animated grid needs JavaScript. The counts are shown above.</p></noscript>
+      </div>
+      <p class="glegend">
+        <span><i class="k-band"></i>1&nbsp;mm, 0.2°</span>
+        <span><i class="k-reach"></i>reached</span>
+        <span><i class="k-cell held"></i>held, final 5&nbsp;s</span>
+      </p>
+      <p class="warn" hidden></p>
+    </figure>
+    <p class="line cap">Each task gets 25&nbsp;s. Reached means within 1&nbsp;mm and 0.2° for 0.5&nbsp;s, held for the whole final 5&nbsp;s.</p>
+
+    <div class="sub">
+      <figure class="slot" id="run2"><video class="media" data-inview src="static/real_long_swing_v2_1920.mp4" poster="static/real_long_swing_v2_poster.png" width="1280" height="720" muted loop playsinline preload="none" controls
+        aria-label="Real arm, one run at 4 times speed: PolicyIK takes four goals in a row without a reset, with long moves between them. After each new goal its pose-error curve drops into the 1 mm, 0.2 degree band."></video></figure>
+      <p class="line cap">Four goals in a row, 32 to 39&nbsp;cm apart, each reached within 1&nbsp;mm and 0.2°.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec alt" id="compare">
+  <div class="wrap">
+    <h2>Classic IK drifts off target.</h2>
+    <div class="vs" role="group" aria-label="Tasks of 60 reached and held by PolicyIK and four classic IK controllers">
+<div class="vs-grp"><p class="vs-k">Reached</p><div class="vs-row ours" style="--v:54"><span class="vs-n">PolicyIK</span><span class="vs-t"><span class="vs-b"></span></span><span class="vs-v">54</span></div><div class="vs-row" style="--v:48"><span class="vs-n">Damped least squares</span><span class="vs-t"><span class="vs-b"></span></span><span class="vs-v">48</span></div><div class="vs-row" style="--v:48"><span class="vs-n">Resolved-rate QP</span><span class="vs-t"><span class="vs-b"></span></span><span class="vs-v">48</span></div><div class="vs-row" style="--v:46"><span class="vs-n">Kinematic MPC</span><span class="vs-t"><span class="vs-b"></span></span><span class="vs-v">46</span></div><div class="vs-row" style="--v:32"><span class="vs-n">Adapted OpenArm QP</span><span class="vs-t"><span class="vs-b"></span></span><span class="vs-v">32</span></div></div>
+<div class="vs-grp"><p class="vs-k">Held</p><div class="vs-row ours" style="--v:43"><span class="vs-n">PolicyIK</span><span class="vs-t"><span class="vs-b"></span></span><span class="vs-v">43</span></div><div class="vs-row" style="--v:17"><span class="vs-n">Damped least squares</span><span class="vs-t"><span class="vs-b"></span></span><span class="vs-v">17</span></div><div class="vs-row" style="--v:16"><span class="vs-n">Resolved-rate QP</span><span class="vs-t"><span class="vs-b"></span></span><span class="vs-v">16</span></div><div class="vs-row" style="--v:15"><span class="vs-n">Kinematic MPC</span><span class="vs-t"><span class="vs-b"></span></span><span class="vs-v">15</span></div><div class="vs-row" style="--v:11"><span class="vs-n">Adapted OpenArm QP</span><span class="vs-t"><span class="vs-b"></span></span><span class="vs-v">11</span></div></div>
+    </div>
+    <p class="line cap">Same 60 tasks, same 25&nbsp;s budget.</p>
+
+    <div class="sub cases" data-cases role="region" aria-label="Cases">
+      <div class="case-tabs" role="tablist" aria-label="Case types">
+        <button class="btn ghost" type="button" role="tab" id="tab-leave" aria-controls="cat-leave" aria-selected="true">Leaves the goal</button>
+        <button class="btn ghost" type="button" role="tab" id="tab-freeze" aria-controls="cat-freeze" aria-selected="false" tabindex="-1">Freezes</button>
+        <button class="btn ghost" type="button" role="tab" id="tab-sing" aria-controls="cat-sing" aria-selected="false" tabindex="-1">Near a singularity</button>
+      </div>
+      <div class="cat" id="cat-leave">
+        <div class="car-track" data-track>
+          <figure class="car-slide" id="leave1"><video class="media" data-inview src="static/compare_long-12_v7_10hz_classic_1920.mp4" poster="static/compare_long-12_v7_10hz_classic_poster.jpg" width="1280" height="720" muted loop playsinline preload="metadata" controls
+            aria-label="Real arm, one task at 4 times speed: PolicyIK above, classic IK below, each with its pose-error curve over the 25 second budget. Both reach the 1 mm, 0.2 degree band and get a tick. PolicyIK stays in the band to the end. Classic IK keeps leaving the band and coming back until the end. Each time it leaves, that part of its curve turns red and a red cross replaces its grey tick. At 25 seconds the final 5 seconds are shaded and the labels read held for PolicyIK and not held for classic IK. Then the view zooms in on the last 10 seconds."></video>
+            <p class="line cap">Both reach the goal. Only PolicyIK stays there.</p></figure>
+          <figure class="car-slide" id="leave2"><video class="media" data-inview src="static/compare_extended-15_v8_classic_1920.mp4" poster="static/compare_extended-15_v8_classic_poster.jpg" width="1280" height="720" muted loop playsinline preload="metadata" controls
+            aria-label="Real arm, one task at 4 times speed: PolicyIK above, classic IK below, each with its pose-error curve over the 25 second budget. PolicyIK reaches the 1 mm, 0.2 degree band, gets a teal tick and stays in the band. Classic IK reaches the band late, then leaves it and comes back twice. Each time it leaves, that part of its curve turns red and a red cross replaces its grey tick. At 25 seconds the final 5 seconds are shaded and the labels read held for PolicyIK and not held for classic IK. Then the view zooms in on the last 10 seconds."></video>
+            <p class="line cap">Classic IK reaches late, then leaves the goal twice.</p></figure>
+        </div>
+        <div class="car-nav" data-nav>
+          <button class="btn ghost car-btn" type="button" data-prev aria-label="Previous clip">‹</button>
+          <span class="car-pos" data-pos></span>
+          <button class="btn ghost car-btn" type="button" data-next aria-label="Next clip">›</button>
+        </div>
+      </div>
+      <div class="cat" id="cat-freeze">
+        <div class="car-track" data-track>
+          <figure class="car-slide" id="case1"><video class="media" data-inview src="static/compare_demo-389-rot131_v8_classic_1920.mp4" poster="static/compare_demo-389-rot131_v8_classic_poster.jpg" width="1280" height="720" muted loop playsinline preload="metadata" controls
+            aria-label="Real arm, a hard case for classic IK, at 4 times speed: PolicyIK above lifts the arm, swings it round and reaches the band (a tick appears), then stays in it. Classic IK below barely moves after the first few seconds and stays far from the goal. Its curve stays high and it gets no tick. At 25 seconds the final 5 seconds are shaded and the labels read held for PolicyIK and not held for classic IK."></video>
+            <p class="line cap">Classic IK freezes far from the goal.</p></figure>
+          <figure class="car-slide" id="case1b"><video class="media" data-inview src="static/compare_demo-1750-rot168-qp_v8_classic_1920.mp4" poster="static/compare_demo-1750-rot168-qp_v8_classic_poster.jpg" width="1280" height="720" muted loop playsinline preload="metadata" controls
+            aria-label="Real arm, another hard case for classic IK, at 4 times speed: PolicyIK above lowers the raised arm, turns the hand and reaches the band (a tick appears), then stays in it. Classic IK below moves for the first few seconds, then stops with the arm still folded up, far from the goal. Its curve falls early on, then stays flat and high, and it gets no tick. At 25 seconds the final 5 seconds are shaded and the labels read held for PolicyIK and not held for classic IK."></video>
+            <p class="line cap">Classic IK freezes far from the goal.</p></figure>
+          <figure class="car-slide" id="case1c"><video class="media" data-inview src="static/compare_medium-00-qp_v8_classic_1920.mp4" poster="static/compare_medium-00-qp_v8_classic_poster.jpg" width="1280" height="720" muted loop playsinline preload="metadata" controls
+            aria-label="Real arm, another hard case for classic IK, at 4 times speed: PolicyIK above swings the arm up to the left, points the hand down and reaches the band (a tick appears), then stays in it. Classic IK below moves for the first few seconds, then stops far from the goal. Its curve falls early on, then stays flat and high, and it gets no tick. At 25 seconds the final 5 seconds are shaded and the labels read held for PolicyIK and not held for classic IK."></video>
+            <p class="line cap">Classic IK freezes far from the goal.</p></figure>
+        </div>
+        <div class="car-nav" data-nav>
+          <button class="btn ghost car-btn" type="button" data-prev aria-label="Previous clip">‹</button>
+          <span class="car-pos" data-pos></span>
+          <button class="btn ghost car-btn" type="button" data-next aria-label="Next clip">›</button>
+        </div>
+      </div>
+      <div class="cat" id="cat-sing">
+        <div class="car-track" data-track>
+          <figure class="car-slide" id="case2"><video class="media" data-inview src="static/compare_demo-1344-rot157_v8_classic_1920.mp4" poster="static/compare_demo-1344-rot157_v8_classic_poster.jpg" width="1280" height="720" muted loop playsinline preload="metadata" controls
+            aria-label="Real arm, a second hard case for classic IK, at 4 times speed: PolicyIK above lifts the arm, turns the hand to the goal and reaches the band (a tick appears), then stays in it. Classic IK below keeps the arm hanging nearly straight and stays far from the goal. Its curve stays high, and it gets no tick. At 25 seconds the final 5 seconds are shaded and the labels read held for PolicyIK and not held for classic IK."></video>
+            <p class="line cap">Near a singularity, classic IK stays far from the goal.</p></figure>
+        </div>
+        <div class="car-nav" data-nav>
+          <button class="btn ghost car-btn" type="button" data-prev aria-label="Previous clip">‹</button>
+          <span class="car-pos" data-pos></span>
+          <button class="btn ghost car-btn" type="button" data-next aria-label="Next clip">›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="design">
+  <div class="wrap">
+    <h2>Reaching and holding need different RL designs.</h2>
+    <figure class="fig">
+      <div class="panel"><img src="static/method.webp" width="1600" height="866" loading="lazy" decoding="async"
+        alt="Paper Figure 2, the PolicyIK control loop. Observation blocks (multiscale pose feedback, command-state feedback, best-so-far error) feed the policy. The action is scaled by an error-dependent gain and accumulated into a clipped joint reference, which a joint PD controller tracks on the arm. The reward combines tracking, progress and dwell terms minus costs."></div>
+    </figure>
+    <div class="designs">
+      <div class="design" style="--fk:var(--fig-orange);--fk-ink:#B35B1B">
+        <h3>It learns the offset that holds the arm on the goal.</h3>
+        <p class="line">It sees its joint reference relative to the measured joints, so it can keep that offset.</p>
+        <p class="line stat"><span aria-hidden="true">→</span> Single-attempt success: PolicyIK <b>93.5%</b> vs <span class="ab">30.8%</span> when each action starts from the measured joints</p>
+        <div class="player"><video class="media" data-src="static/loop_C1_dolly_r2fb_once_1920.mp4" data-once data-start="static/poster_C1_dolly_r2fb.png" poster="static/poster_C1_dolly_r2fb.png" width="1280" height="720" muted playsinline preload="none"
+          aria-label="Simulation replay of one task: a wide view of a long reach, then the camera moves in to the hand. Above, PolicyIK's hand point settles inside the tolerance circle at the goal. Below, with the reference re-anchored at the measured joints, it stops outside the circle."></video>
+          <div class="progress" aria-hidden="true"><span></span></div>
+          <button class="replay" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Replay</button></div>
+      </div>
+      <div class="design" style="--fk:var(--fig-teal);--fk-ink:#3F7C83">
+        <h3>It resolves millimeter errors without shrinking large motions.</h3>
+        <p class="line">It sees <span class="hl">coarse and fine pose errors</span>, and its <span class="hl">action gain shrinks</span> as the error gets small.</p>
+        <p class="line stat"><span aria-hidden="true">→</span> Median position error: PolicyIK <b>0.25&nbsp;mm</b> vs <span class="ab">0.36&nbsp;mm</span> without fine pose channels</p>
+        <p class="line stat"><span aria-hidden="true">→</span> Median entry time: PolicyIK <b>1.73&nbsp;s</b> vs <span class="ab">2.28&nbsp;s</span> with a fixed gain</p>
+        <div class="player"><video class="media" data-src="static/loop_C2_nonum_once_1920.mp4" data-once data-start="static/poster_C2_nonum.png" poster="static/poster_C2_nonum.png" width="1280" height="720" muted playsinline preload="none"
+          aria-label="Animation in two parts. First, the pose error on a coarse and a fine scale. Without fine pose channels only the coarse scale remains, and the median position error curve ends higher. Second, steps toward a target: the error-dependent gain takes large steps far away and small ones near it, and the share of tasks within tolerance rises sooner than with a fixed gain."></video>
+          <div class="progress" aria-hidden="true"><span></span></div>
+          <button class="replay" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Replay</button></div>
+      </div>
+      <div class="design" style="--fk:var(--fig-purple);--fk-ink:#7462C7">
+        <h3>Progress gets it there. Dwell keeps it there.</h3>
+        <p class="line"><span class="hl">Progress</span> rewards every step closer. <span class="hl">Dwell</span> rewards every step within 1&nbsp;mm and 0.2°.</p>
+        <p class="line stat"><span aria-hidden="true">→</span> Entered tasks not held through the final second: PolicyIK <b>2.4%</b> vs <span class="ab">7.8%</span> without dwell</p>
+        <div class="player"><video class="media" data-src="static/loop_C3_dolly_r3_once_1920.mp4" data-once data-start="static/poster_C3_dolly_r3.png" poster="static/poster_C3_dolly_r3.png" width="1280" height="720" muted playsinline preload="none"
+          aria-label="Simulation replay of one task: a wide view, then the camera moves in to the hand. PolicyIK settles at the center of the tolerance circle with a low angle bar. Without the dwell reward, the hand point circles near the edge of the circle and partly leaves it."></video>
+          <div class="progress" aria-hidden="true"><span></span></div>
+          <button class="replay" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Replay</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec alt" id="training">
+  <div class="wrap">
+    <h2>Trained directly on a real arm with FlashSAC.</h2>
+    <p class="line">Every transition on hardware costs robot time, so PolicyIK concentrates its data where precision is decided.</p>
+    <ul class="points">
+      <li><b>Reverse curriculum.</b> Episodes start <span class="hl">close to their goals</span>, and the start distance grows as training proceeds. The policy learns the final correction and holding first.</li>
+      <li><b>Near-goal sampling.</b> Steps near the goal decide success but are rare early in training, so <span class="hl">most of each batch is drawn from them</span>.</li>
+      <li><b>Latent-alignment critic.</b> Large rotations often need a detour on which the pose error first grows. The critic embeds the state and the goal separately and predicts the value from <span class="hl">their difference</span>, which better captures how many steps remain to reach the goal.</li>
+    </ul>
+    <figure class="slot" style="margin-top:32px"><div class="player"><video class="media" data-src="static/training_onepage_v40_1920.mp4" data-once data-start="static/training_onepage_v40_poster.webp" poster="static/training_onepage_v40_poster.webp" width="1920" height="1080" muted playsinline preload="none"
+      aria-label="The three training designs on one page. Episode starts spread outward from a goal as training time passes. Training samples are drawn mostly near the goal. A real-arm recording swings away from the goal before reaching it, and the critic encodes the state and the goal separately and compares them."></video>
+      <div class="progress" aria-hidden="true"><span></span></div>
+      <button class="replay" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Replay</button></div></figure>
+  </div>
+</section>
+
+<section class="sec" id="xarm">
+  <div class="wrap">
+    <h2>The PolicyIK recipe also works on a physical xArm7.</h2>
+    <p class="line">Trained in simulation or on the arm, both policies <span class="hl">succeed on all 60 standard and 60 large-rotation tasks</span>.</p>
+    <figure class="slot">
+      <video class="media" data-inview src="static/xarm_policyik_v2_1920.mp4" poster="static/xarm_policyik_v2_poster.jpg" width="1280" height="720" muted loop playsinline preload="metadata" controls
+        aria-label="PolicyIK on a large-rotation goal on the xArm7, at four times speed, with its pose error falling into the 1 mm and 0.2° band and staying there."></video>
+    </figure>
+  </div>
+</section>
+
+<section class="sec alt" id="sim">
+  <div class="wrap">
+    <h2>In simulation, 98.9% of held-out tasks end within 1&nbsp;mm and 0.2°.</h2>
+    <p class="line stat">One forward pass takes <b>0.035&nbsp;ms</b> on one CPU core, three orders of magnitude below the control period</p>
+    <figure class="slot">
+      <video class="media" src="static/sim_reach_ghost_g35x070_a055_tick_1920.mp4" poster="static/poster_sim_reach_ghost_g35x070_a055.png" width="1280" height="720" muted autoplay loop playsinline
+        aria-label="Simulation, real time: six held-out tasks, each starting 0.5 to 0.9 m and 25 to 165 degrees from its goal. A grey, half-transparent gripper marks each goal pose. Each readout turns teal and a teal tick appears after it when the error is within 1 mm and 0.2 degrees, and all six end inside."></video>
+    </figure>
+    <p class="line cap">The grey gripper marks each goal.</p>
+  </div>
+</section>
+
+<section class="sec" id="vla">
+  <div class="wrap">
+    <h2>PolicyIK executes π<sub>0.5</sub>'s commands with 95.7% success.</h2>
+    <p class="line">Simulated pick-and-place on ten LIBERO-Object tasks. PolicyIK is <span class="hl">trained only to reach</span>.</p>
+    <div class="slots2">
+      <figure class="slot"><video class="media" src="static/pi05_butter_place_v3_1920.mp4" poster="static/pi05_butter_place_v3.jpg" width="1280" height="720" muted autoplay loop playsinline
+        aria-label="Simulation: PolicyIK executes pi 0.5's commands, picking up the butter and placing it in the basket"></video></figure>
+      <figure class="slot"><video class="media" src="static/pi05_ketchup_place_v3_1920.mp4" poster="static/pi05_ketchup_place_v3.jpg" width="1280" height="720" muted autoplay loop playsinline
+        aria-label="Simulation: PolicyIK executes pi 0.5's commands, picking up the ketchup and placing it in the basket"></video></figure>
+    </div>
+  </div>
+</section>
+
+<section class="sec alt" id="bibtex">
+  <div class="wrap">
+    <h2>BibTeX</h2>
+    <div class="bibbox"><button class="copy" type="button" id="copy-bib">Copy</button><pre class="bib"><code id="bibtext">@article{liu2026policyik,
+  title   = {PolicyIK: High-Precision Inverse Kinematics for Robot Arms with Reinforcement Learning},
+  author  = {Liu, Yuhan and Liu, Xinqi and Dong, Zixuan and Ross, Keith W. and Wan, Shenji},
+  journal = {arXiv preprint arXiv:2611.05372},
+  year    = {2026}
+}</code></pre></div>
+  </div>
+</section>
+</main>
+
+
+<script>
+(() => {
+  const links = [...document.querySelectorAll('.banner nav a')];
+  const byId = new Map(links.map((a) => [a.getAttribute('href').slice(1), a]));
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  const spy = new IntersectionObserver((entries) => entries.forEach((e) => {
+    if (!e.isIntersecting) return;
+    links.forEach((a) => { a.classList.remove('on'); a.removeAttribute('aria-current'); });
+    const a = byId.get(e.target.id);
+    if (a) { a.classList.add('on'); a.setAttribute('aria-current', 'location'); }
+  }), { rootMargin: '-40% 0px -55% 0px' });
+  ['top', ...byId.keys()].forEach((id) => { const sec = document.getElementById(id); if (sec) spy.observe(sec); });
+})();
+</script>
+
+<script>
+(() => {
+  const gate = new WeakSet();
+  let resync = (v) => { if (gate.has(v)) v.pause(); };
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('[data-cases]').forEach((box) => {
+    const groups = [...box.querySelectorAll('[role="tab"]')].map((tab) => {
+      const panel = document.getElementById(tab.getAttribute('aria-controls'));
+      const track = panel.querySelector('[data-track]');
+      return { tab, panel, track, slides: [...track.children], nav: panel.querySelector('[data-nav]'), prev: panel.querySelector('[data-prev]'),
+        next: panel.querySelector('[data-next]'), pos: panel.querySelector('[data-pos]'), cur: 0, timer: 0 };
+    });
+    let sel = 0;
+    const apply = () => groups.forEach((g, c) => {
+      g.slides.forEach((sl, k) => {
+        const on = c === sel && k === g.cur;
+        sl.inert = k !== g.cur;
+        sl.querySelectorAll('video').forEach((v) => {
+          if (on === gate.has(v)) { if (on) gate.delete(v); else gate.add(v); resync(v); }
+        });
+      });
+      if (g.prev) g.prev.disabled = g.cur === 0;
+      if (g.next) g.next.disabled = g.cur === g.slides.length - 1;
+      if (g.pos) g.pos.textContent = `${g.cur + 1} / ${g.slides.length}`;
+    });
+    const left = (g, i) => g.slides[i].offsetLeft - g.slides[0].offsetLeft;
+    const go = (g, i, smooth = true) => {
+      g.cur = Math.max(0, Math.min(g.slides.length - 1, i));
+      apply();
+      g.track.scrollTo({ left: left(g, g.cur), behavior: smooth && !reduceMotion ? 'smooth' : 'auto' });
+    };
+    const settle = (g) => {
+      const x = g.track.scrollLeft, last = g.slides.length - 1;
+      let k = 0;
+      if (x + g.track.clientWidth >= g.track.scrollWidth - 2) k = last;
+      else g.slides.forEach((sl, j) => { if (Math.abs(left(g, j) - x) < Math.abs(left(g, k) - x)) k = j; });
+      if (k !== g.cur) { g.cur = k; apply(); }
+    };
+    const pick = (c, focus) => {
+      sel = c;
+      groups.forEach((g, j) => {
+        g.tab.setAttribute('aria-selected', String(j === c));
+        g.tab.tabIndex = j === c ? 0 : -1;
+        g.panel.hidden = j !== c;
+      });
+      go(groups[c], groups[c].cur, false);
+      if (focus) groups[c].tab.focus();
+    };
+    groups.forEach((g, c) => {
+      g.panel.setAttribute('role', 'tabpanel');
+      g.panel.setAttribute('aria-labelledby', g.tab.id);
+      g.tab.addEventListener('click', () => pick(c, false));
+      g.tab.addEventListener('keydown', (e) => {
+        const n = groups.length;
+        const to = { ArrowRight: (c + 1) % n, ArrowLeft: (c - 1 + n) % n, Home: 0, End: n - 1 }[e.key];
+        if (to !== undefined) { e.preventDefault(); pick(to, true); }
+      });
+      g.nav.hidden = g.slides.length < 2;
+      if (g.slides.length < 2) return;
+      g.track.setAttribute('role', 'group');
+      g.track.setAttribute('aria-label', `${g.tab.textContent.trim()}, clips`);
+      g.track.tabIndex = 0;
+      g.slides.forEach((sl) => sl.setAttribute('aria-roledescription', 'slide'));
+      g.prev.addEventListener('click', () => go(g, g.cur - 1));
+      g.next.addEventListener('click', () => go(g, g.cur + 1));
+      g.track.addEventListener('keydown', (e) => {
+        if (e.target !== g.track) return;
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { e.preventDefault(); go(g, g.cur + d); }
+      });
+      g.track.addEventListener('click', (e) => {
+        if (e.target !== g.track) return;
+        const k = g.slides.findIndex((sl) => { const r = sl.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right; });
+        if (k >= 0 && k !== g.cur) go(g, k);
+      });
+      g.track.addEventListener('scroll', () => { clearTimeout(g.timer); g.timer = setTimeout(() => settle(g), 100); }, { passive: true });
+      if ('ResizeObserver' in window) new ResizeObserver(() => go(g, g.cur, false)).observe(g.track);
+    });
+    box.classList.add('on');
+    pick(0, false);
+    groups.forEach((g) => { if (!g.nav.hidden) g.pos.setAttribute('aria-live', 'polite'); });
+  });
+  const vids = [...document.querySelectorAll('video[data-inview]')];
+  if (!vids.length || matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
+  const shown = new Set();
+  const sync = (v) => {
+    if (shown.has(v) && !gate.has(v) && !document.hidden) {
+      const p = v.play();
+      if (p) p.catch(() => { v.controls = true; });
+    } else v.pause();
+  };
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting && e.intersectionRatio >= 0.25) shown.add(e.target); else shown.delete(e.target);
+      sync(e.target);
+    }
+  }, { threshold: [0, 0.25] });
+  resync = sync;
+  vids.forEach((v) => { if (!v.closest('[data-cases]')) v.controls = false; io.observe(v); });
+  document.addEventListener('visibilitychange', () => vids.forEach(sync));
+})();
+</script>
+
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) {
+    document.querySelectorAll('video[autoplay]').forEach((v) => { v.autoplay = false; v.pause(); v.controls = true; });
+  } else {
+    document.querySelectorAll('video[autoplay]').forEach((v) => {
+      const p = v.play();
+      if (p) p.catch(() => { v.controls = true; });
+    });
+  }
+  const onceVids = [...document.querySelectorAll('video[data-once]')];
+  const load = (v) => { if (!v.getAttribute('src') && v.dataset.src) v.src = v.dataset.src; };
+  const start = (v) => { const p = v.play(); if (p) p.catch(() => { v.controls = true; }); };
+  if (onceVids.length && (reduce || !('IntersectionObserver' in window))) {
+    onceVids.forEach((v) => { load(v); v.controls = true; });
+  } else if (onceVids.length) {
+    const near = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) load(e.target); }), { rootMargin: '400px 0px' });
+    const seen = new IntersectionObserver((es) => es.forEach((e) => {
+      const v = e.target;
+      clearTimeout(v._dwell);
+      if (e.intersectionRatio >= 0.6) v._dwell = setTimeout(() => start(v), 300);
+      else if (!e.isIntersecting && !v.ended) { v.pause(); v.currentTime = 0; }
+    }), { threshold: [0, 0.6] });
+    onceVids.forEach((v) => {
+      const box = v.closest('.player');
+      const again = box.querySelector('.replay');
+      const bar = box.querySelector('.progress span');
+      const tick = () => {
+        bar.style.transform = `scaleX(${v.duration ? v.currentTime / v.duration : 0})`;
+        if (!v.paused && !v.ended) requestAnimationFrame(tick);
+      };
+      v.poster = v.dataset.start;
+      near.observe(v);
+      seen.observe(v);
+      v.addEventListener('play', () => requestAnimationFrame(tick));
+      v.addEventListener('seeked', tick);
+      v.addEventListener('ended', () => { seen.unobserve(v); again.hidden = false; tick(); });
+      again.addEventListener('click', () => { again.hidden = true; v.currentTime = 0; start(v); });
+    });
+  }
+  const btn = document.getElementById('copy-bib');
+  const code = document.getElementById('bibtext');
+  if (!btn || !code) return;
+  if (!navigator.clipboard) { btn.hidden = true; return; }
+  btn.addEventListener('click', () => {
+    navigator.clipboard.writeText(code.textContent).then(
+      () => { btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); },
+      () => { btn.textContent = 'Select to copy'; });
+  });
+})();
+</script>
+
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+  const root = document.documentElement;
+
+  const fig = document.getElementById('grid');
+  const canvas = fig.querySelector('canvas');
+  const wrapEl = canvas.parentElement;
+  const clock = fig.querySelector('[data-clock]');
+  const outReached = fig.querySelector('[data-count="reached"]');
+  const outHeld = fig.querySelector('[data-count="held"]');
+  const warn = fig.querySelector('.warn');
+  const toggle = fig.querySelector('[data-play]');
+  const label = toggle.querySelector('[data-label]');
+  const EXPECT = { reached: Number(fig.dataset.reached), held: Number(fig.dataset.held) };
+  const Y_MIN = -0.8, Y_MAX = 3.0, T_END = 25, PULSE_S = 0.9;
+  const PHASE1 = 6250, PAUSE = 350, WIN_IN = 450, HOLD_IN = 1500;  // ms; 25 s of robot time in 6.25 s = 4x
+  const ctx = canvas.getContext('2d');
+  const look = {};
+  let D = null, tasks = [], layout = null, raf = 0;
+  const state = { t: T_END, win: 1, hold: 1 };
+
+  function readLook() {
+    const cs = getComputedStyle(root);
+    const v = (k) => cs.getPropertyValue('--' + k).trim();
+    for (const k of ['ink', 'band', 'accent', 'unheld', 'cell', 'cell-line', 'cell-held', 'held-curve']) look[k] = v(k);
+    const cells = v('cells');
+    look.cells = cells === 'box' || cells === 'tile' ? cells : 'rule';
+    look.radius = parseFloat(v('radius')) || 0;
+    look.aspect = parseFloat(getComputedStyle(wrapEl).getPropertyValue('--cell-aspect')) || 0.62;
+  }
+
+  function analyse(d) {
+    const out = d.tasks.map((t) => {
+      let run = 0, reachK = -1;
+      for (let k = 0; k < t.q.length; k++) {
+        run = t.q[k] <= 0 ? run + 1 : 0;
+        if (run >= d.reach_k) { reachK = k; break; }
+      }
+      const held = t.q.slice(-d.hold_k).every((q) => q <= 0);
+      return { q: t.q, reachT: reachK < 0 ? Infinity : d.t0 + reachK * d.dt, held };
+    });
+    out.sort((a, b) => (a.reachT === b.reachT ? 0 : a.reachT < b.reachT ? -1 : 1));
+    let j = 0;
+    const nHeld = out.filter((t) => t.held).length;
+    for (const t of out) if (t.held) t.holdStart = (j++ / nHeld) * 0.75;
+    return out;
+  }
+
+  function doLayout() {
+    const w = wrapEl.clientWidth;
+    const narrow = w < 520;
+    const cols = narrow ? 6 : 10, rows = Math.ceil(tasks.length / cols), gap = narrow ? 4 : 6;
+    const cw = (w - gap * (cols - 1)) / cols, ch = cw * (narrow ? 0.74 : look.aspect);
+    const h = rows * ch + gap * (rows - 1);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    canvas.style.height = h + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    layout = { w, h, cols, gap, cw, ch };
+  }
+
+  const heldAlpha = (t) => (t.held ? clamp01((state.hold - t.holdStart) / 0.25) : 0);
+
+  function cellShape(cw, ch, r) {
+    ctx.beginPath();
+    if (r > 0 && ctx.roundRect) ctx.roundRect(0.5, 0.5, cw - 1, ch - 1, r); else ctx.rect(0.5, 0.5, cw - 1, ch - 1);
+  }
+
+  function dot(px, py, r, color, alpha) {
+    ctx.globalAlpha = alpha; ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+  }
+
+  function drawCell(t, cw, ch) {
+    const pad = 4, framed = look.cells !== 'rule';
+    const x = (s) => pad + (s / T_END) * (cw - 2 * pad);
+    const y = (v) => pad + (1 - (Math.min(Y_MAX, Math.max(Y_MIN, v)) - Y_MIN) / (Y_MAX - Y_MIN)) * (ch - 2 * pad);
+    const y0 = Math.round(y(0)) + 0.5, ha = heldAlpha(t);
+    ctx.save();
+    if (framed) { cellShape(cw, ch, Math.min(look.radius * 0.6, cw * 0.1)); ctx.fillStyle = look.cell; ctx.fill(); ctx.clip(); }
+    ctx.fillStyle = look.band; ctx.fillRect(0, y0, cw, ch - y0);
+    if (state.win > 0) {
+      const xs = x(T_END - D.hold_s);
+      ctx.globalAlpha = 0.07 * state.win; ctx.fillStyle = look.ink; ctx.fillRect(xs, 0, cw - xs, ch); ctx.globalAlpha = 1;
+    }
+    ctx.strokeStyle = look['cell-line']; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, y0); ctx.lineTo(cw, y0); ctx.stroke();
+    if (look.cells === 'tile' && ha > 0) {
+      ctx.globalAlpha = ha; ctx.fillStyle = look['cell-held']; ctx.fillRect(0, 0, cw, ch); ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+    if (framed) { cellShape(cw, ch, Math.min(look.radius * 0.6, cw * 0.1)); ctx.strokeStyle = look['cell-line']; ctx.lineWidth = 1; ctx.stroke(); }
+
+    const n = Math.min(t.q.length, Math.floor((state.t - D.t0) / D.dt + 1e-9) + 1);
+    if (n <= 0) return;
+    const px = (k) => x(D.t0 + k * D.dt), py = (k) => y(t.q[k] / 1000);
+    ctx.lineWidth = 1.25; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (let k = 0; k < n; k++) { if (k === 0) ctx.moveTo(px(k), py(k)); else ctx.lineTo(px(k), py(k)); }
+    if (ha < 1) { ctx.globalAlpha = 1 - ha; ctx.strokeStyle = look.unheld; ctx.stroke(); }
+    if (ha > 0) { ctx.globalAlpha = ha; ctx.strokeStyle = look['held-curve']; ctx.stroke(); }
+    ctx.globalAlpha = 1;
+    if (state.t < T_END) dot(px(n - 1), py(n - 1), 1.6, look.ink, 1);
+    if (ha > 0) dot(px(n - 1), py(n - 1), 1.8, look['held-curve'], ha);
+    if (t.reachT <= state.t) {
+      const rx = x(t.reachT), age = state.t - t.reachT;
+      dot(rx, y0, 2.4, look.accent, 1 - ha);
+      if (age < PULSE_S) {
+        const a = 1 - age / PULSE_S;
+        ctx.globalAlpha = a; ctx.strokeStyle = look.accent; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.arc(rx, y0, 2.4 + 7 * (1 - a), 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
+      }
+    }
+  }
+
+  function render() {
+    if (!D || !layout) return;
+    const { cols, gap, cw, ch } = layout;
+    ctx.clearRect(0, 0, layout.w, layout.h);
+    tasks.forEach((t, i) => {
+      ctx.save(); ctx.translate((i % cols) * (cw + gap), Math.floor(i / cols) * (ch + gap));
+      drawCell(t, cw, ch); ctx.restore();
+    });
+    outReached.textContent = tasks.filter((t) => t.reachT <= state.t).length;
+    outHeld.textContent = tasks.filter((t) => heldAlpha(t) >= 0.5).length;
+    clock.textContent = 't = ' + state.t.toFixed(1) + ' s · 4×';
+  }
+
+  function finalState() { state.t = T_END; state.win = 1; state.hold = 1; }
+
+  const ANIM = PHASE1 + PAUSE + WIN_IN * 0.5 + HOLD_IN, CYCLE = ANIM + 3000;
+  const once = reduce.matches;
+  let elapsed = once ? ANIM : 0, last = 0, running = false, paused = once, onScreen = false;
+
+  function frameAt(e) {
+    const e2 = e - PHASE1 - PAUSE;
+    state.t = Math.min(T_END, (e / PHASE1) * T_END);
+    state.win = clamp01(e2 / WIN_IN);
+    state.hold = clamp01((e2 - WIN_IN * 0.5) / HOLD_IN);
+  }
+
+  function showPaused() {
+    toggle.setAttribute('aria-pressed', String(paused));
+    label.textContent = paused ? 'Play' : 'Pause';
+  }
+
+  function tick(now) {
+    elapsed += Math.max(0, now - last); last = now;
+    if (once && elapsed >= ANIM) { elapsed = ANIM; paused = true; showPaused(); }
+    if (elapsed >= CYCLE) elapsed %= CYCLE;
+    frameAt(Math.min(elapsed, ANIM)); render();
+    if (paused) { running = false; return; }
+    raf = requestAnimationFrame(tick);
+  }
+
+  function sync() {
+    const go = !!D && !paused && onScreen && !document.hidden;
+    if (go && !running) { running = true; last = performance.now(); raf = requestAnimationFrame(tick); }
+    else if (!go && running) { running = false; cancelAnimationFrame(raf); }
+  }
+
+  toggle.addEventListener('click', () => {
+    if (!D) return;
+    paused = !paused;
+    if (!paused && once && elapsed >= ANIM) elapsed = 0;
+    showPaused(); sync();
+  });
+
+  const relook = () => { if (!D) return; readLook(); doLayout(); render(); };
+  new MutationObserver(relook).observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-palette'] });
+  let lastW = 0;
+  new ResizeObserver(() => {
+    if (!D || wrapEl.clientWidth === lastW) return;
+    lastW = wrapEl.clientWidth; readLook(); doLayout(); render();
+  }).observe(wrapEl);
+
+  fetch('static/curves.json')
+    .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then((d) => {
+      D = d; tasks = analyse(d);
+      const got = { reached: tasks.filter((t) => t.reachT < Infinity).length, held: tasks.filter((t) => t.held).length };
+      if (tasks.length !== 60 || got.reached !== EXPECT.reached || got.held !== EXPECT.held) {
+        warn.hidden = false;
+        warn.textContent = 'Data check failed: the curve file gives ' + got.reached + ' reached and ' + got.held +
+          ' held of ' + tasks.length + '. The page text says ' + EXPECT.reached + ' and ' + EXPECT.held + '.';
+      }
+      readLook(); lastW = wrapEl.clientWidth; doLayout();
+      finalState(); render(); showPaused();
+      document.addEventListener('visibilitychange', sync);
+      if (!('IntersectionObserver' in window)) { onScreen = true; sync(); return; }
+      new IntersectionObserver((es) => {
+        onScreen = es[es.length - 1].intersectionRatio >= 0.2; sync();
+      }, { threshold: [0, 0.2] }).observe(fig);
+    })
+    .catch(() => {
+      const p = document.createElement('p');
+      p.className = 'nodata';
+      p.textContent = 'The curve data could not be loaded here (serve the folder over HTTP to see the grid). The counts above are from the same data.';
+      wrapEl.replaceChildren(p);
+      toggle.hidden = true; clock.hidden = true;
+    });
+})();
+</script>
+</body>
+</html>
