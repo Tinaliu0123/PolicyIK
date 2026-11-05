@@ -112,6 +112,10 @@ h3{margin:0 0 6px;font:var(--w-head) 23.3px/1.3 var(--serif);color:var(--accent)
 .thesis-kw.reached{color:var(--accent)}
 .thesis-kw.held{color:var(--held-curve)}
 .sub{margin-top:28px}
+.views{display:none;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;margin:0 auto 12px}
+.views.on{display:flex}
+.views-k{font-size:var(--fs-xs);color:var(--muted);margin-right:4px}
+.views [aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .sub>h3{text-align:center}
 p.line{max-width:var(--measure);margin:16px auto 0;text-align:center;color:var(--ink-2);text-wrap:balance}
 .hl{font-weight:600;color:var(--ink);background:linear-gradient(transparent 60%,var(--mark) 60%);padding-inline:1px}
@@ -276,11 +280,12 @@ pre.bib{margin:0;padding:18px 20px;overflow-x:auto;background:#fff;border:1px so
         <a class="btn" href="https://arxiv.org/pdf/2611.05372" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>Paper</a>
         <a class="btn" href="https://arxiv.org/abs/2611.05372" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19 12 5l7 14M8 13h8"/></svg>arXiv</a>
         <a class="btn" data-flag="code" href="https://github.com/Tinaliu0123/PolicyIK" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5"/></svg>Code</a>
+        <a class="btn" href="https://x.com/l_yuhan7272/status/2118366838719422651" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.4l-5.8-7.58-6.64 7.58H.47l8.6-9.83L0 1.15h7.6l5.24 6.93zm-1.29 19.5h2.04L6.49 3.24H4.3z"/></svg>Thread</a>
       </nav>
     </div>
 
     <figure class="slot full film" id="film">
-      <video src="static/film_v3_22_1920.mp4" poster="static/film_v3_21_poster.jpg" muted autoplay loop playsinline controls preload="auto" aria-label="PolicyIK overview film"></video>
+      <video src="static/film_v3_24_1920.mp4" poster="static/film_v3_21_poster.jpg" muted autoplay loop playsinline controls preload="auto" aria-label="PolicyIK overview film"></video>
     </figure>
     <p class="line lede">PolicyIK reaches and holds poses within 1&nbsp;mm and 0.2°, trained directly on a physical arm.</p>
   </div>
@@ -321,9 +326,26 @@ pre.bib{margin:0;padding:18px 20px;overflow-x:auto;background:#fff;border:1px so
     <p class="line cap">Each task gets 25&nbsp;s. Reached means within 1&nbsp;mm and 0.2° for 0.5&nbsp;s, held for the whole final 5&nbsp;s.</p>
 
     <div class="sub">
-      <figure class="slot" id="run2"><video class="media" data-inview src="static/real_long_swing_v2_1920.mp4" poster="static/real_long_swing_v2_poster.png" width="1280" height="720" muted loop playsinline preload="none" controls
+      <h3>After training</h3>
+      <figure class="slot" id="run2"><video class="media" data-inview data-scrub src="static/real_long_swing_v2_1920.mp4" poster="static/real_long_swing_v2_poster.png" width="1280" height="720" muted loop playsinline preload="none" controls
         aria-label="Real arm, one run at 4 times speed: PolicyIK takes four goals in a row without a reset, with long moves between them. After each new goal its pose-error curve drops into the 1 mm, 0.2 degree band."></video></figure>
       <p class="line cap">Four goals in a row, 32 to 39&nbsp;cm apart, each reached within 1&nbsp;mm and 0.2°.</p>
+    </div>
+
+    <div class="sub" id="snapshots">
+      <h3>During training</h3>
+      <div class="views" role="group" aria-label="Two views of the same five training episodes">
+        <span class="views-k">Two views</span>
+        <button class="btn ghost" type="button" aria-pressed="true" data-src="static/training_snapshots_grid_v2_3p5x_1920.mp4"
+          data-poster="static/training_snapshots_grid_v2_3p5x_poster.jpg"
+          data-label="Real arm at 3.5 times speed: the policy at 0, 25, 50, 75 and 100 percent of training, side by side, with a pose-error curve under each. 0 to 50 percent never enter the 1 mm, 0.2 degree band, 75 and 100 percent reach it.">All five side by side</button>
+        <button class="btn ghost" type="button" aria-pressed="false" data-src="static/training_snapshots_seq_v1_1920.mp4"
+          data-poster="static/training_snapshots_seq_v1_poster.jpg"
+          data-label="Real arm at 4 times speed: the policy at 0, 25, 50, 75 and 100 percent of training, one after another. Each pose-error curve stays on the plot. 0 to 50 percent never enter the 1 mm, 0.2 degree band, 75 and 100 percent reach it.">One after another</button>
+      </div>
+      <figure class="slot"><video class="media" data-inview data-scrub src="static/training_snapshots_grid_v2_3p5x_1920.mp4" poster="static/training_snapshots_grid_v2_3p5x_poster.jpg" width="1920" height="1080" muted loop playsinline preload="none" controls
+        aria-label="Real arm at 3.5 times speed: the policy at 0, 25, 50, 75 and 100 percent of training, side by side, with a pose-error curve under each. 0 to 50 percent never enter the 1 mm, 0.2 degree band, 75 and 100 percent reach it."></video></figure>
+      <p class="line cap">The policy at five points of real-arm training. Each episode runs with the training exploration noise.</p>
     </div>
   </div>
 </section>
@@ -595,6 +617,21 @@ pre.bib{margin:0;padding:18px 20px;overflow-x:auto;background:#fff;border:1px so
     pick(0, false);
     groups.forEach((g) => { if (!g.nav.hidden) g.pos.setAttribute('aria-live', 'polite'); });
   });
+  document.querySelectorAll('.views').forEach((row) => {
+    const v = row.parentElement.querySelector('video');
+    const btns = [...row.querySelectorAll('button[data-src]')];
+    if (!v || btns.length < 2) return;
+    btns.forEach((b) => b.addEventListener('click', () => {
+      if (b.getAttribute('aria-pressed') === 'true') return;
+      btns.forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+      v.pause();
+      v.poster = b.dataset.poster;
+      v.src = b.dataset.src;
+      v.setAttribute('aria-label', b.dataset.label);
+      resync(v);
+    }));
+    row.classList.add('on');
+  });
   const vids = [...document.querySelectorAll('video[data-inview]')];
   if (!vids.length || matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
   const shown = new Set();
@@ -611,7 +648,7 @@ pre.bib{margin:0;padding:18px 20px;overflow-x:auto;background:#fff;border:1px so
     }
   }, { threshold: [0, 0.25] });
   resync = sync;
-  vids.forEach((v) => { if (!v.closest('[data-cases]')) v.controls = false; io.observe(v); });
+  vids.forEach((v) => { if (!v.closest('[data-cases]') && !v.hasAttribute('data-scrub')) v.controls = false; io.observe(v); });
   document.addEventListener('visibilitychange', () => vids.forEach(sync));
 })();
 </script>
