@@ -8,6 +8,7 @@ Yuhan Liu<sup>1*</sup>, Xinqi Liu<sup>1*</sup>, Zixuan Dong<sup>1*</sup>, Keith 
 
 [![arXiv](https://img.shields.io/badge/arXiv-2611.05372-b31b1b.svg?logo=arxiv&logoColor=white)](https://arxiv.org/abs/2611.05372)
 [![Project Website](https://img.shields.io/badge/Project-Website-1f4e9c.svg?logo=googlechrome&logoColor=white)](https://tinaliu0123.github.io/PolicyIK/)
+[![X Thread](https://img.shields.io/badge/-Thread-000000.svg?logo=x&logoColor=white)](https://x.com/l_yuhan7272/status/2118366838719422651)
 
 </div>
 
