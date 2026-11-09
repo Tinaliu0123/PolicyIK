@@ -18,6 +18,8 @@ Yuhan Liu<sup>1*</sup>, Xinqi Liu<sup>1*</sup>, Zixuan Dong<sup>1*</sup>, Keith 
 
 PolicyIK is a goal-conditioned reinforcement learning policy for high-precision inverse kinematics (IK) of robot arms. In simulation and when trained directly on a physical OpenArm, it reaches and holds full end-effector poses within 1 mm and 0.2° on more tasks than classical IK controllers.
 
+> **Community reimplementation (unofficial):** a from-scratch MuJoCo port on a 6-DoF UR5e — CPU (Stable-Baselines3) and GPU (MJX + Brax), reproducing the classical IK baselines — is available at [VatsalyaBhadaurya/PolicyIK](https://github.com/VatsalyaBhadaurya/PolicyIK).
+
 ## 📝 Table of Contents
 
 - [Project Structure](#project-structure)
